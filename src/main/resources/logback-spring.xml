@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 全部進行Debug level紀錄，並且每30秒監控設定檔是否有異動 -->
+<configuration debug="true" scan="true" scanPeriod="30 seconds">
+	<!-- 使用logback的基本設定 -->
+	<include resource="org/springframework/boot/logging/logback/base.xml"/>
+	<!-- 記錄檔存放路徑 -->
+	<property name="LOG_PATH" value="logs" />
+	<!-- 歷史記錄檔存放路徑 -->
+	<property name="LOG_ARCHIVE" value="${LOG_PATH}/archive" />
+	<!-- 檔名規則 -->
+	<timestamp key="timestamp-by-second" datePattern="yyyyMMdd'T'HHmmss"/>
+
+	<!-- Console畫面log檔的格式 -->
+	<appender name="Console-Appender" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<!-- 紀錄存放格式 -->
+			<pattern>%d %-5level [%thread] %logger{0} : %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="File-Appender" class="ch.qos.logback.core.FileAppender">
+		<file>${LOG_PATH}/log/logfile-${timestamp-by-second}.log</file>
+		<encoder>
+			<!-- 檔案輸出的格式 -->
+			<pattern>%d %-5level [%thread] %logger{0} : %msg%n</pattern>
+			<!-- 表示將輸出的格式顯示在該檔案的最上方 -->
+			<outputPatternAsHeader>true</outputPatternAsHeader>
+		</encoder>
+	</appender>
+
+	<!-- 記錄每天日誌 -->
+	<appender name="Rolling-File-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<!-- daily roll over -->
+			<fileNamePattern>${LOG_ARCHIVE}/all/rollingfile-all-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+			<!-- each file should be at most 500MB, keep 60 days' worth of history -->
+			<maxHistory>180</maxHistory>
+			<maxFileSize>500MB</maxFileSize> 
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d %-5level [%thread] %logger{0} : %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!--
+	<appender name="Rolling-Info-File-Appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>ERROR</level>
+			<onMatch>DENY</onMatch>
+			<onMismatch>ACCEPT</onMismatch>
+		</filter>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${LOG_ARCHIVE}/info/rollingfile-info-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+			<maxHistory>180</maxHistory>
+			<maxFileSize>10KB</maxFileSize>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d %-5level [%thread] %logger{0} : %msg%n</pattern>
+		</encoder>
+	</appender>
+	-->
+
+	<root level="debug">
+		<appender-ref ref="Console-Appender" />
+		<appender-ref ref="File-Appender" />
+		<appender-ref ref="Rolling-File-Appender" />
+	</root>
+
+	<!-- 紀錄套用package、level等 -->
+	<logger name="com.example" level="debug" additivity="false">
+		<appender-ref ref="Console-Appender" />
+		<appender-ref ref="File-Appender" />
+		<appender-ref ref="Rolling-File-Appender" />
+	</logger>
+
+	<!-- 測試環境+開發環境. 多個使用逗號隔開. -->
+	<springProfile name="test,dev">
+		<logger name="com.example" level="DEBUG" additivity="false">
+			<appender-ref ref="Console-Appender" />
+			<appender-ref ref="File-Appender" />
+			<appender-ref ref="Rolling-File-Appender" />
+		</logger>
+	</springProfile>
+
+	<!-- 生產環境. -->
+	<springProfile name="prod">
+		<logger name="com.example" level="INFO" additivity="false">
+			<appender-ref ref="Console-Appender" />
+			<appender-ref ref="File-Appender" />
+			<appender-ref ref="Rolling-File-Appender" />
+		</logger>
+	</springProfile>
+</configuration>
